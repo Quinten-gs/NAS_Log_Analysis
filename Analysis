@@ -23,63 +23,37 @@
  "nbformat_minor": 2,
  "cells": [
   {
+   "source": [
+    "# NAS Log Analysis \n",
+    "\n",
+    "From the logs outputted by a NAS I extracted all unauthorized blocked SSH requests. We'll take a look at these in this notebook. We are only interested in the logs which were captured since 2021 as the server was temporarily offline before 2021."
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
+  },
+  {
    "cell_type": "code",
    "execution_count": 1,
    "metadata": {},
    "outputs": [],
    "source": [
-    "import pandas as pd"
+    "import pandas as pd\n",
+    "import plotly.express as px\n",
+    "import json\n",
+    "from requests import get\n",
+    "import time"
    ]
   },
   {
-   "cell_type": "code",
-   "execution_count": 3,
-   "metadata": {},
-   "outputs": [],
    "source": [
-    "df = pd.read_csv('Data/syslog_2021-2-21-11 1 44.csv')"
-   ]
+    "### Examining hourly variation in SSH connection attempts"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
   },
   {
    "cell_type": "code",
-   "execution_count": 10,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "df['Time'] = df.Time.apply(pd.Timestamp)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 12,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import plotly.express as px"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 16,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "df = df[df['Time'].apply(lambda l:l.year) >= 2021]"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 44,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "df.index = df.Time\n",
-    "gb = df.groupby(df.Time.apply(lambda l:l.hour)).count()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 53,
+   "execution_count": 2,
    "metadata": {},
    "outputs": [
     {
@@ -998,71 +972,24 @@
     }
    ],
    "source": [
+    "df = pd.read_csv('Data/syslog_2021-2-21-11 1 44.csv')\n",
+    "df['Time'] = df.Time.apply(pd.Timestamp)\n",
+    "df = df[df['Time'].apply(lambda l:l.year) >= 2021]\n",
+    "df.index = df.Time\n",
+    "gb = df.groupby(df.Time.apply(lambda l:l.hour)).count()\n",
     "px.line(gb,gb.index,'Log')"
    ]
   },
   {
-   "cell_type": "code",
-   "execution_count": 55,
-   "metadata": {},
-   "outputs": [
-    {
-     "output_type": "execute_result",
-     "data": {
-      "text/plain": [
-       "Int64Index([6, 6, 6, 6, 6, 6, 6, 6, 6, 6,\n",
-       "            ...\n",
-       "            6, 6, 6, 6, 6, 6, 6, 6, 6, 5],\n",
-       "           dtype='int64', name='Time', length=870)"
-      ]
-     },
-     "metadata": {},
-     "execution_count": 55
-    }
-   ],
-   "source": []
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 56,
-   "metadata": {},
-   "outputs": [],
    "source": [
-    "gb = df.groupby(df.index.weekday).count()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 57,
-   "metadata": {},
-   "outputs": [
-    {
-     "output_type": "execute_result",
-     "data": {
-      "text/plain": [
-       "      Level  Log  Time  User  Event  count\n",
-       "Time                                      \n",
-       "0       119  119   119   119    119    119\n",
-       "1       124  124   124   124    124    124\n",
-       "2       137  137   137   137    137    137\n",
-       "3       146  146   146   146    146    146\n",
-       "4       112  112   112   112    112    112\n",
-       "5       149  149   149   149    149    149\n",
-       "6        83   83    83    83     83     83"
-      ],
-      "text/html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Level</th>\n      <th>Log</th>\n      <th>Time</th>\n      <th>User</th>\n      <th>Event</th>\n      <th>count</th>\n    </tr>\n    <tr>\n      <th>Time</th>\n      <th></th>\n      <th></th>\n      <th></th>\n      <th></th>\n      <th></th>\n      <th></th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>119</td>\n      <td>119</td>\n      <td>119</td>\n      <td>119</td>\n      <td>119</td>\n      <td>119</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>124</td>\n      <td>124</td>\n      <td>124</td>\n      <td>124</td>\n      <td>124</td>\n      <td>124</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>137</td>\n      <td>137</td>\n      <td>137</td>\n      <td>137</td>\n      <td>137</td>\n      <td>137</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>146</td>\n      <td>146</td>\n      <td>146</td>\n      <td>146</td>\n      <td>146</td>\n      <td>146</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>112</td>\n      <td>112</td>\n      <td>112</td>\n      <td>112</td>\n      <td>112</td>\n      <td>112</td>\n    </tr>\n    <tr>\n      <th>5</th>\n      <td>149</td>\n      <td>149</td>\n      <td>149</td>\n      <td>149</td>\n      <td>149</td>\n      <td>149</td>\n    </tr>\n    <tr>\n      <th>6</th>\n      <td>83</td>\n      <td>83</td>\n      <td>83</td>\n      <td>83</td>\n      <td>83</td>\n      <td>83</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
-     },
-     "metadata": {},
-     "execution_count": 57
-    }
+    "### Examining variations in weekdays in SSH connection attempts"
    ],
-   "source": [
-    "gb"
-   ]
+   "cell_type": "markdown",
+   "metadata": {}
   },
   {
    "cell_type": "code",
-   "execution_count": 58,
+   "execution_count": 3,
    "metadata": {},
    "outputs": [
     {
@@ -1947,15 +1874,42 @@
     }
    ],
    "source": [
+    "gb = df.groupby(df.index.weekday).count()\n",
     "px.line(gb,gb.index,'Log')"
    ]
+  },
+  {
+   "source": [
+    "### Examining Origin of the IP adresses"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
   },
   {
    "cell_type": "code",
    "execution_count": null,
    "metadata": {},
    "outputs": [],
-   "source": []
+   "source": [
+    "\n",
+    "df['ip'] = df.Event.apply(lambda l:l.split('[')[1].split(']')[0])\n",
+    "## IPinfo.io allows a few thousand free requests per day using their open API, use scarcely. \n",
+    "\n",
+    "def get_ip_data(ip):\n",
+    "    time.sleep(0.001)\n",
+    "    url = f'https://ipinfo.io/{ip}/json'\n",
+    "    response = get(url)\n",
+    "    print(f'Request to: {url}.')\n",
+    "    data = json.loads(response.content.decode('utf8'))\n",
+    "    print(data)\n",
+    "    org=data['org']\n",
+    "    city = data['city']\n",
+    "    country=data['country']\n",
+    "    region=data['region']\n",
+    "    return org,city,country,region\n",
+    "\n",
+    "df['Organisation'], df['City'], df['Country'], df['region'] = zip(*df.ip.apply(get_ip_data))"
+   ]
   }
  ]
 }
